@@ -8,7 +8,8 @@ This Python Project provides a graphical user interface (GUI) for visualizing va
 
 ## Video Link:
 
-[![Algorithmic Hub](https://github.com/SaadARazzaq/algorithmic-hub/assets/123338307/88b2bd5a-dcd3-4369-97fd-8b7a8724f927)](https://youtu.be/eTAAgStW5zE)
+[![Algorithmic Hub (2)](https://github.com/SaadARazzaq/algorithmic-hub/assets/123338307/d2264fc0-dc62-4d4b-99a0-85930d710e91)
+](https://youtu.be/eTAAgStW5zE)
 
 ## Getting Started
 
