@@ -23,7 +23,7 @@ This Python Project provides a graphical user interface (GUI) for visualizing va
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/pathfinding-visualizer.git
+    git clone https://github.com/saadarazzaq/algorithmic-hub.git
     ```
 
 2. Install Requirements:
