@@ -20,11 +20,6 @@
 
 </div>
 
-> [!IMPORTANT]
-> **Implementation status:** This repository contains implementations of nine search strategies, but the main visualizer currently **runs A\*** by default. The algorithm dropdown in `dashboard.py` is a **separate, unconnected interface**; choosing an item there does not change the algorithm in `main.py`. This README documents the code as it exists, distinguishes textbook guarantees from implementation-specific behavior, and identifies work needed for reliable, reproducible evaluation. “Production-grade documentation” does **not** mean the current application is production-ready.
-
----
-
 ## Contents
 
 1. [Overview and objectives](#overview-and-objectives)
