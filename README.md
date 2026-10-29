@@ -28,17 +28,15 @@
 4. [Quick start](#quick-start)
 5. [Repository structure](#repository-structure)
 6. [Architecture and execution model](#architecture-and-execution-model)
-7. [Problem formulation](#problem-formulation)
 8. [Algorithm catalogue](#algorithm-catalogue)
 9. [Algorithm design and implementation notes](#algorithm-design-and-implementation-notes)
 10. [Data structures and state transitions](#data-structures-and-state-transitions)
 11. [Complexity and theoretical comparison](#complexity-and-theoretical-comparison)
 12. [Correctness, reproducibility and evaluation](#correctness-reproducibility-and-evaluation)
 13. [Known limitations and technical debt](#known-limitations-and-technical-debt)
-14. [Development roadmap](#development-roadmap)
-15. [Contributing](#contributing)
-16. [Research references](#research-references)
-17. [License](#license)
+14. [Contributing](#contributing)
+15. [Research references](#research-references)
+16. [License](#license)
 
 ## Overview and objectives
 
@@ -59,7 +57,119 @@ The project makes the mechanics of search observable: **frontier expansion, expl
 | Explainability | Can the search process be observed and reasoned about step by step? | Pygame node colors and redraw callbacks |
 | Verification | Do observed paths satisfy feasibility, optimality, and reproducibility criteria? | Proposed test/benchmark protocol below; **not yet automated** |
 
-**Positioning:** This is an implementation and visualization of established algorithms, **not a claim of a novel search algorithm, a formally verified implementation, or a completed experimental research study**. Its research value lies in the comparative framework it can support once the correctness and instrumentation work described below is completed.
+
+## Algorithmic Implementations & Search Strategies
+
+Algorithmic Hub provides implementations of **nine graph-search and pathfinding algorithms**, representing multiple approaches to state-space exploration, heuristic search, shortest-path computation, and constrained search.
+
+The project is designed to demonstrate how different algorithmic strategies solve the same pathfinding problem, enabling comparisons of their exploration behavior, data structures, computational characteristics, and theoretical guarantees.
+
+### Implemented Algorithms
+
+| # | Algorithm | Classification | Search Strategy | Primary Data Structure |
+|---|---|---|---|---|
+| 01 | A* Search | Informed, heuristic-based | Minimizes estimated total path cost | Priority Queue |
+| 02 | Greedy Best-First Search | Informed, heuristic-based | Expands nodes closest to the goal by heuristic estimate | Priority Queue |
+| 03 | Breadth-First Search (BFS) | Uninformed | Explores nodes level by level | FIFO Queue |
+| 04 | Depth-First Search (DFS) | Uninformed | Explores one branch before backtracking | LIFO Stack |
+| 05 | Uniform-Cost Search (UCS) | Uninformed, cost-based | Expands the lowest-cost frontier node | Priority Queue |
+| 06 | Depth-Limited Search (DLS) | Uninformed, depth-constrained | Explores recursively within a depth bound | Recursion Stack |
+| 07 | Iterative Deepening DFS (IDDFS) | Uninformed, iterative | Repeats depth-limited search with increasing limits | Recursion Stack |
+| 08 | Bidirectional BFS | Uninformed, bidirectional | Searches simultaneously from start and goal | Two FIFO Queues |
+| 09 | Dijkstra's Algorithm | Uninformed, shortest-path | Expands vertices by minimum known distance | Priority Queue |
+
+### Why These Algorithms Were Implemented
+
+The selection represents five fundamental families of graph-search techniques.
+
+#### 1. Heuristic-Guided Search
+
+**Algorithms:** A* and Greedy Best-First Search
+
+These algorithms use domain-specific knowledge to prioritize promising search states.
+
+- **A\*** combines the accumulated path cost, `g(n)`, with an estimated remaining cost, `h(n)`, using `f(n) = g(n) + h(n)`. It demonstrates how admissible heuristics can guide optimal shortest-path search.
+- **Greedy Best-First Search** prioritizes `h(n)` alone, illustrating the trade-off between goal-directed exploration and path optimality.
+
+**Implementation rationale:** To investigate the influence of heuristic information on node-expansion order, search efficiency, and solution quality.
+
+The implementation uses **Manhattan distance** as its heuristic, appropriate for four-directional grid movement with unit-cost edges.
+
+#### 2. Systematic Uninformed Search
+
+**Algorithms:** BFS and DFS
+
+These algorithms explore graph states without incorporating an estimate of the remaining distance to the goal.
+
+- **BFS** performs level-order exploration and guarantees a shortest path by edge count in an unweighted graph.
+- **DFS** explores deeply along individual branches, illustrating how traversal order and frontier management influence discovered paths.
+
+**Implementation rationale:** To establish foundational graph-search baselines and demonstrate the differences between breadth-oriented and depth-oriented exploration.
+
+#### 3. Cost-Based Shortest-Path Search
+
+**Algorithms:** Uniform-Cost Search and Dijkstra's Algorithm
+
+Both approaches prioritize accumulated path costs rather than heuristic estimates.
+
+- **UCS** illustrates best-first search ordered by the cumulative cost from the initial state.
+- **Dijkstra's Algorithm** demonstrates shortest-path computation through distance relaxation and priority-based vertex expansion.
+
+**Implementation rationale:** To study path-cost optimization independently of heuristic guidance and establish a conceptual comparison with A*.
+
+**Important distinction:** The existing grid uses unit-cost transitions. Under this cost model, UCS, Dijkstra's Algorithm, and BFS are closely related in their search objectives. Weighted edges would be necessary to demonstrate the broader advantages of cost-sensitive search.
+
+#### 4. Depth-Constrained and Iterative Search
+
+**Algorithms:** DLS and IDDFS
+
+These strategies investigate search under explicit depth restrictions.
+
+- **DLS** limits recursive exploration to a specified maximum depth.
+- **IDDFS** repeatedly performs depth-limited searches with progressively increasing depth bounds.
+
+**Implementation rationale:** To demonstrate depth-based search control, the limitations of fixed-depth exploration, and how iterative deepening combines aspects of BFS and DFS.
+
+#### 5. Bidirectional Search
+
+**Algorithm:** Bidirectional BFS
+
+This approach maintains separate search frontiers originating from the start and goal states, aiming to identify an intersection between the two searches.
+
+**Implementation rationale:** To investigate whether simultaneous exploration from opposite directions can reduce the effective search depth compared with conventional single-source BFS.
+
+Under suitable assumptions, bidirectional BFS can reduce a search space with branching factor `b` and solution depth `d` from approximately `O(b^d)` to `O(b^(d/2))`.
+
+### Core Functional Components
+
+In addition to the search algorithms, the repository implements several supporting components.
+
+| Component | Python Function / Class | Responsibility |
+|---|---|---|
+| Grid representation | `Nodes`, `make_grid()` | Models the search space as traversable and blocked cells |
+| Graph connectivity | `Nodes.update_neighbours()` | Constructs four-directional adjacency relationships |
+| Heuristic estimation | `manhattan_dist()` | Calculates L1 distance between two grid coordinates |
+| Path reconstruction | `reconstruct_path()` | Traverses predecessor relationships to visualize the discovered route |
+| Grid rendering | `draw()`, `draw_grid()` | Renders search states and grid geometry using Pygame |
+| Coordinate mapping | `get_mouseclicked_position()` | Maps mouse coordinates to grid cells |
+| Search execution | `a_star_algorithm()`, `breadth_first()`, etc. | Executes the corresponding graph-search procedure |
+| Interaction handling | `main()` | Processes grid editing, keyboard input, and visualization events |
+| Visual feedback | `screen_shake()` | Provides visual feedback when a search reports failure |
+
+### Experimental and Educational Objectives
+
+The implementations provide a foundation for examining the following research questions:
+
+1. **Search efficiency:** How does the choice of exploration strategy affect the number of expanded nodes?
+2. **Path optimality:** Under what assumptions does an algorithm guarantee a minimum-cost solution?
+3. **Heuristic effectiveness:** How does Manhattan-distance guidance affect search behavior relative to uninformed methods?
+4. **Frontier management:** How do FIFO queues, LIFO stacks, and priority queues influence traversal patterns?
+5. **Search-space constraints:** How do depth limits and iterative deepening affect completeness and computational overhead?
+6. **Bidirectional exploration:** When can two-frontier search reduce the effort required to connect initial and goal states?
+
+The current implementation serves as an interactive algorithm-study platform. Formal benchmarking, comprehensive correctness tests, weighted graph support, and experimental validation remain opportunities for further development.
+
+---
 
 ## Project status and scope
 
@@ -125,8 +235,6 @@ The project should **not currently be relied upon** for safety-critical navigati
 | Lime | `make_open()` | Discovered/frontier cell |
 | Red | `make_closed()` | Explored/closed cell |
 
-> [!NOTE]
-> The current implementation stores visualization state **directly in the node's color field**. It does not maintain a clean separation between logical state and presentation. In particular, start/goal markers may be overwritten by subsequent search coloring; `is_goal()` checks for turquoise although `make_goal()` assigns purple. Do not infer precise solver invariants from color alone.
 
 ### Existing media
 
@@ -149,8 +257,6 @@ The repository's original README includes screenshots and a demonstration. These
 - `pip` and an available Python virtual environment.
 - A local graphical desktop/session capable of opening a Pygame window.
 - The **Pygame** package, installed manually as shown below.
-
-> **Dependency clarification:** There is currently **no `requirements.txt`**. The committed `pyproject.toml` specifies Flask for a separate prototype but **does not include Pygame**. Accordingly, `pip install -r requirements.txt` is not a valid installation command for this revision, and a bare `poetry install` is not sufficient for the GUI.
 
 ### macOS / Linux
 
@@ -226,7 +332,6 @@ This snippet illustrates a **manual source edit**, not a runtime dropdown or a c
 | `python dashboard.py` | Separate Pygame algorithm-choice UI mockup | Does not execute the selected algorithm or modify `main.py` |
 | `python app.py` | Minimal Flask greeting app | Does not serve the visualization or expose a pathfinding API |
 
-The `.replit` configuration invokes `python app.py`; that default starts the **Flask greeting**, not Algorithmic Hub's Pygame visualizer. To run the actual project, use `python main.py` in a suitable desktop environment.
 
 ### Source-level configuration
 
@@ -245,8 +350,6 @@ The cell size is calculated with integer division: `gap = width // rows`. For th
 ```text
 algorithmic-hub/
 ├── .gitignore            # Python-related ignore rules
-├── .replit               # Replit entry point; launches Flask app.py
-├── LICENSE               # MIT license (2023)
 ├── README.md             # Project documentation
 ├── app.py                # Independent Flask greeting prototype
 ├── colors.py             # Named RGB color constants
@@ -271,8 +374,6 @@ algorithmic-hub/
 | [`dashboard.py`](dashboard.py) | List of nine algorithms, dropdown, placeholder instruction button | Separate event loop; no command dispatch into `main.py` |
 | [`app.py`](app.py) | Flask `/` endpoint returning greeting HTML | Separate prototype, not part of the search pipeline |
 | [`pyproject.toml`](pyproject.toml) / [`poetry.lock`](poetry.lock) | Python packaging/dependency metadata | Tracks Flask, not GUI runtime dependencies |
-| [`.replit`](.replit) / [`replit.nix`](replit.nix) | Replit runtime configuration | Default command points at `app.py` |
-| [`LICENSE`](LICENSE) | Open-source licensing | MIT |
 
 ## Architecture and execution model
 
@@ -324,79 +425,6 @@ The `dashboard.py` and `app.py` programs are **not** edges in this runtime graph
 - A test harness cannot safely import `main.py` without launching Pygame, because it calls `main(console_window, width)` at module import/execution time.
 - `dashboard.py` duplicates the algorithm list but does not provide a shared solver registry.
 - A robust next version should separate **graph model**, **search engine**, **events/trace**, and **presentation/controller**.
-
-## Problem formulation
-
-### Discrete graph representation
-
-The grid is modeled as an undirected, unweighted, obstacle-constrained graph:
-
-\[
-G=(V,E),\qquad V=\{(r,c)\mid 0\le r,c<N,\ \text{cell}(r,c)\text{ is traversable}\}.
-\]
-
-Two traversable cells are adjacent if they differ by exactly one coordinate in one axis:
-
-\[
-E=\{(u,v)\mid u,v\in V,\ \|u-v\|_1=1\}.
-\]
-
-Here, the Manhattan norm is
-
-\[
-\|u-v\|_1=|r_u-r_v|+|c_u-c_v|.
-\]
-
-By construction, the search uses **four-connectivity**; diagonal edges are absent. Each move is assigned unit cost:
-
-\[
-w(u,v)=1\quad\forall (u,v)\in E.
-\]
-
-For a path \(P=(v_0,\ldots,v_k)\), the path cost is therefore
-
-\[
-C(P)=\sum_{i=0}^{k-1}w(v_i,v_{i+1})=k.
-\]
-
-The optimization problem is to find a feasible path from start \(s\) to goal \(t\) minimizing \(C(P)\), or report that no such path exists. **Finding some path** and **finding a minimum-cost path** are distinct objectives.
-
-### State-space size
-
-For an \(N\times N\) grid, the maximum number of cells is \(N^2\); with \(N=50\), the visualization allocates **2,500 nodes** before obstacles are considered. The number of traversable graph edges is at most \(2N(N-1)\) undirected edges in an obstacle-free grid, or \(4N(N-1)\) directed adjacency entries if each neighbor link is counted separately. Thus \(|E|=O(|V|)\) on this fixed-degree lattice.
-
-### Manhattan heuristic
-
-A* and Greedy Best-First Search use:
-
-\[
-h(n)=|r_n-r_t|+|c_n-c_t|.
-\]
-
-For orthogonal unit-cost motion, each move can reduce Manhattan distance by at most one. Therefore \(h(n)\) is a lower bound on the actual remaining path cost, even if walls force detours:
-
-\[
-0\le h(n)\le h^*(n).
-\]
-
-For every traversable adjacent pair \((u,v)\), Manhattan distance also satisfies consistency:
-
-\[
-h(u)\le 1+h(v).
-\]
-
-These are the conditions that support shortest-path guarantees for a **correctly implemented** A* graph search. An admissible/consistent heuristic **does not by itself prove that this repository's implementation is correct**, particularly if frontier entries are not updated appropriately when a lower cost is discovered.
-
-### Priority functions
-
-| Strategy | Frontier priority | Interpretation |
-|---|---|---|
-| A* | \(f(n)=g(n)+h(n)\) | Balance accumulated path cost and estimated remaining cost |
-| Greedy Best-First | \(f(n)=h(n)\) | Favor the node appearing closest to the goal |
-| Uniform-Cost Search | \(f(n)=g(n)\) | Expand lowest accumulated-cost state |
-| Dijkstra | \(f(n)=d(s,n)\) | Expand smallest known distance from the source |
-
-In this project, all edge weights are one, so BFS, UCS, Dijkstra, and correctly implemented A* are expected to return paths of the **same minimum length** when a solution exists. Their *search order, memory use, and explored-node counts* can differ.
 
 ## Algorithm catalogue
 
@@ -613,22 +641,6 @@ The current solver API generally returns `True`/`False`/`None` (or a list in the
 
 **Important qualifications:** Complexity expressions depend on graph-search versus tree-search conventions, duplicate suppression, heap design, branch balance, and whether the input graph is materialized. The current IDDFS stores a predecessor dictionary across a depth pass and is **not an \(O(d)\)-space implementation as written**. The current bidirectional algorithm is **not validated as a shortest-path implementation**. The main GUI redraws the full \(N^2\) grid per search update, so visualization cost can dominate search cost.
 
-### Cost of visualization
-
-If the solver causes \(R\) redraw calls and each redraw paints \(N^2\) cells, the cell-painting work alone scales approximately as
-
-\[
-T_{\text{render}}=O(RN^2).
-\]
-
-For an honest algorithm comparison, distinguish:
-
-\[
-T_{\text{observed}} = T_{\text{search}} + T_{\text{render}} + T_{\text{sleep}} + T_{\text{event/overhead}}.
-\]
-
-An algorithm that makes more `draw()` calls or adds an animation delay will appear slower **even if its search operations are efficient**. Report search-only and end-to-end latency separately.
-
 ## Correctness, reproducibility and evaluation
 
 **Current evidence status:** This repository contains no committed automated test suite, CI test results, benchmark harness, or measured comparative dataset. The protocol below is a **proposed evaluation framework**, not a report of experiments already completed.
@@ -741,47 +753,6 @@ These findings come from inspection of the committed implementation. They are **
 | **Low** | API consistency | Solvers return booleans/`None` or a list | Hard to compare outcomes programmatically | Standardized `SearchResult` |
 
 **Priority distinction:** A polished README can make an educational prototype easier to understand and extend, but it cannot repair algorithmic correctness, create empirical evidence, or establish production reliability. Those require code changes and recorded validation.
-
-## Development roadmap
-
-The following is a proposed roadmap, not a list of completed features.
-
-### Phase 1 — make existing behavior reliable
-
-- [ ] Add an explicit Pygame dependency and a validated installation process.
-- [ ] Split the grid/search implementation from the Pygame entry point.
-- [ ] Fix UCS tie handling, A* frontier updates, and weighted Dijkstra relaxation.
-- [ ] Repair bidirectional BFS exhaustion and path ordering.
-- [ ] Replace unbounded IDDFS iteration with a terminating search policy.
-- [ ] Ensure every algorithm returns a valid, standardized result.
-- [ ] Add unit tests, edge-case tests, and cross-solver correctness comparisons.
-- [ ] Restore start/goal markers independently of path color.
-
-### Phase 2 — integrate the application
-
-- [ ] Integrate the algorithm selector into the actual grid visualizer.
-- [ ] Add configurable grid dimensions, animation speed, and step-by-step controls.
-- [ ] Provide pause, resume, cancel, and reset between searches.
-- [ ] Separate wall data, search-state data, and rendering-state data.
-- [ ] Replace blocking sleeps with an event-driven animation mechanism.
-- [ ] Add a usable help panel, legend, and current algorithm/status display.
-
-### Phase 3 — make comparison reproducible
-
-- [ ] Add maze save/load with documented schema.
-- [ ] Add seeded maze generation and stratified benchmark maps.
-- [ ] Add trace/event export, metrics and CSV/JSON results.
-- [ ] Add CI, linting, type checks and automated regression tests.
-- [ ] Publish baseline benchmark results **with** environment and source revision.
-- [ ] Add optional weighted terrain, then validate UCS/Dijkstra/A* against an independent weighted reference.
-
-### Phase 4 — research extensions
-
-- [ ] Evaluate alternative admissible heuristics under explicit graph assumptions.
-- [ ] Compare search strategies across obstacle densities and maze topologies.
-- [ ] Explore weighted A*, IDA*, and incremental search as **new modules**, not as current features.
-- [ ] Study the relationship between expansion count, route quality, memory, and rendering overhead.
-- [ ] Provide experimental protocols, confidence intervals, failure analyses, and reproducible artifacts.
 
 ## Contributing
 
